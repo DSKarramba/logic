@@ -19,7 +19,7 @@ function WIRE(ax0, ax1) {
 function INPUT(ax, state) {
     this.x = ax;
     this.state = !!state;
-    ax.state = !!this.state;
+    ax.state = this.state;
 }
 
 /* logical output */
@@ -52,7 +52,6 @@ function OR(ax0_0, ax0_1, ax1) {
     this.x1 = ax1;
     this.x1.state = (!!this.x00.state) + (!!this.x01.state);
     ax1.state = !!this.x1.state;
-
 }
 
 /* TEST PART */
