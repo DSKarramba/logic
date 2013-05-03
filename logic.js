@@ -228,7 +228,7 @@ wire.push(new WIRE(node[15], node[16]));
 el.push(new OUTPUT(node[16]));
 // -------------------------------------
 
-/* тест RS-триггера */
+/* тест JK-триггера */
 node = node.concat(/* 17 */ new X(50, 360), new X(150, 360), new X(50, 420), new X(150, 420));
 node = node.concat(/* 21 */ new X(50, 390), new X(150, 390), new X(210, 390), new X(260, 390));
 
