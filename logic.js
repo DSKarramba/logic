@@ -87,6 +87,7 @@ canvas.font = '11pt PT Sans';
 canvas.textAlign = 'center';
 canvas.textBaseline = 'middle';
 
+/* draw node */
 function drawX(xx) {
     canvas.beginPath();
     canvas.arc(xx.x, xx.y, 5, 0, Math.PI * 2, true);
@@ -95,6 +96,7 @@ function drawX(xx) {
     canvas.fill();
 }
 
+/* draw wire */
 function drawWIRE(xwire) {
     canvas.beginPath();
     canvas.moveTo(xwire.x0.x, xwire.x0.y);
@@ -105,6 +107,7 @@ function drawWIRE(xwire) {
     canvas.stroke();
 }
 
+/* draw in- and outputs */
 function drawPIN(xpin) {
     canvas.beginPath();
     canvas.arc(xpin.x.x, xpin.x.y, 11, 0, Math.PI * 2, true);
@@ -122,6 +125,7 @@ function drawPIN(xpin) {
     canvas.fillText(xpin.state + 0, xpin.x.x, xpin.x.y);
 }
 
+/* draw OR */
 function drawOR(xor) {
     canvas.strokeStyle = '#000';
     canvas.lineWidth = 2;
@@ -133,6 +137,7 @@ function drawOR(xor) {
     canvas.fillText("1", xor.x00.x + 30, xor.x1.y);
 }
 
+/* draw AND */
 function drawAND(xand) {
     canvas.strokeStyle = '#000';
     canvas.lineWidth = 2;
@@ -144,6 +149,7 @@ function drawAND(xand) {
     canvas.fillText("&", xand.x00.x + 30, xand.x1.y);
 }
 
+/* draw NOT */
 function drawNOT(xnot) {
     canvas.beginPath();
     canvas.lineWidth = 2;
@@ -165,6 +171,7 @@ function drawNOT(xnot) {
     canvas.fill();
 }
 
+/* draw JK flip-flop */
 function drawJK(xJK) {
     canvas.strokeStyle = '#000';
     canvas.lineWidth = 2;
@@ -194,11 +201,18 @@ function drawJK(xJK) {
 
 var wire = []; var el = [];
 
-/* тест: умножение 1 на инверсию другой 1 */
+/* тест 1: умножение 1 на инверсию другой 1 */
 var node = [new X(50, 40), new X(100, 40), new X(157, 40), new X(210, 40)];
 node = node.concat(/* 4 */ new X(50, 100), new X(210, 100), new X(270, 70), new X(320, 70));
+/* тест 2: сложение сигнала со своей инверсией */
+node = node.concat(/* 8 */ new X(50, 200), new X(100, 200, 1), new X(150, 200), new X(207, 200));
+node = node.concat(/* 12 */ new X(260, 200), new X(100, 260, 1), new X(260, 260), new X(320, 230));
+node = node.concat(/* 16 */ new X(370, 230));
+/* тест 3: JK-триггер */
+node = node.concat(/* 17 */ new X(50, 360), new X(150, 360), new X(50, 420), new X(150, 420));
+node = node.concat(/* 21 */ new X(50, 390), new X(150, 390), new X(210, 390), new X(260, 390));
 
-// -------------------------------------
+// -------------- тест 1 -----------------
 el.push(new INPUT(node[0], 1));
 wire.push(new WIRE(node[0], node[1]));
 el.push(new NOT(node[1], node[2]));
@@ -208,14 +222,9 @@ wire.push(new WIRE(node[4], node[5]));
 el.push(new AND(node[3], node[5], node[6]));
 wire.push(new WIRE(node[6], node[7]));
 el.push(new OUTPUT(node[7]));
-// -------------------------------------
+// ---------------------------------------
 
-/* тест, включающий соединение проводов -- сложение сигнала со своей инверсией */
-node = node.concat(/* 8 */ new X(50, 200), new X(100, 200, 1), new X(150, 200), new X(207, 200));
-node = node.concat(/* 12 */ new X(260, 200), new X(100, 260, 1), new X(260, 260), new X(320, 230));
-node = node.concat(/* 16 */ new X(370, 230));
-
-// -------------------------------------
+// -------------- тест 2 -----------------
 el.push(new INPUT(node[8], 0));
 wire.push(new WIRE(node[8], node[9]));
 wire.push(new WIRE(node[9], node[10]));
@@ -226,13 +235,9 @@ wire.push(new WIRE(node[13], node[14]));
 el.push(new OR(node[12], node[14], node[15]));
 wire.push(new WIRE(node[15], node[16]));
 el.push(new OUTPUT(node[16]));
-// -------------------------------------
+// ---------------------------------------
 
-/* тест JK-триггера */
-node = node.concat(/* 17 */ new X(50, 360), new X(150, 360), new X(50, 420), new X(150, 420));
-node = node.concat(/* 21 */ new X(50, 390), new X(150, 390), new X(210, 390), new X(260, 390));
-
-// -------------------------------------
+// -------------- тест 3 -----------------
 el.push(new INPUT(node[17], 1)); // J
 wire.push(new WIRE(node[17], node[18]));
 el.push(new INPUT(node[19], 0)); // K
