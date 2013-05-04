@@ -1,13 +1,26 @@
-﻿/* LOGIC PART */
+var canvas = document.getElementById('test').getContext('2d');
+var colorTrue = '#f5bb15';
+var colorFalse = '#15bbf5';
+canvas.font = '11pt PT Sans';
+canvas.textAlign = 'center';
+canvas.textBaseline = 'middle';
 
 /* double negative is used to work with boolean variables */
 /* logical node */
-function X(cx, cy, /* 'true' for connections */ draw, /* optional */ cstate) {
+function X(cx, cy, /* 'true' for connections */ visible, /* optional */ cstate) {
     this.x = cx;
     this.y = cy;
     this.state = (!!cstate) || false;
-    this.type = 'X';
-    this.draw = (!!draw) || false;
+    this.visible = (!!visible) || false;
+    this.draw = function() {
+        if (this.visible) {
+            canvas.beginPath();
+            canvas.arc(this.x, this.y, 5, 0, Math.PI * 2, true);
+            canvas.closePath();
+            canvas.fillStyle = this.state ? colorTrue : colorFalse;
+            canvas.fill();
+        }
+    }
 }
 
 /* wire between two Xs */
@@ -15,7 +28,15 @@ function WIRE(ax0, ax1) {
     this.x0 = ax0;
     this.x1 = ax1;
     this.x1.state = !!this.x0.state;
-    this.type = 'WIRE';
+    this.draw = function() {
+        canvas.beginPath();
+        canvas.moveTo(this.x0.x, this.x0.y);
+        canvas.lineTo(this.x1.x, this.x1.y);
+        canvas.closePath();
+        canvas.lineWidth = 4;
+        canvas.strokeStyle = this.x1.state ? colorTrue : colorFalse;
+        canvas.stroke();
+    }
 }
 
 /* logical input: 1 or 0 */
@@ -23,14 +44,42 @@ function INPUT(ax, state) {
     this.state = !!state;
     ax.state = this.state;
     this.x = ax;
-    this.type = 'PIN';
+    this.draw = function() {
+        canvas.beginPath();
+        canvas.arc(this.x.x, this.x.y, 11, 0, Math.PI * 2, true);
+        canvas.closePath();
+        canvas.fillStyle = this.x.state ? colorTrue : colorFalse;
+        canvas.fill();
+        canvas.beginPath();
+        canvas.arc(this.x.x, this.x.y, 11, 0, Math.PI * 2, true);
+        canvas.closePath();
+        canvas.lineWidth = 2;
+        canvas.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+        canvas.stroke();
+        canvas.fillStyle = '#000';
+        canvas.fillText(this.state + 0, this.x.x, this.x.y);
+    }
 }
 
 /* logical output */
 function OUTPUT(ax) {
     this.x = ax;
     this.state = !!ax.state;
-    this.type = 'PIN';
+    this.draw = function() {
+        canvas.beginPath();
+        canvas.arc(this.x.x, this.x.y, 11, 0, Math.PI * 2, true);
+        canvas.closePath();
+        canvas.fillStyle = this.x.state ? colorTrue : colorFalse;
+        canvas.fill();
+        canvas.beginPath();
+        canvas.arc(this.x.x, this.x.y, 11, 0, Math.PI * 2, true);
+        canvas.closePath();
+        canvas.lineWidth = 2;
+        canvas.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+        canvas.stroke();
+        canvas.fillStyle = '#000';
+        canvas.fillText(this.state + 0, this.x.x, this.x.y);
+    }
 }
 
 /* logical function: x1 = not x0 */
@@ -39,7 +88,27 @@ function NOT(ax0, ax1) {
     this.x1 = ax1;
     this.x1.state = !this.x0.state;
     ax1.state = this.x1.state;
-    this.type = 'NOT';
+    this.draw = function() {
+        canvas.beginPath();
+        canvas.lineWidth = 2;
+        canvas.strokeStyle = '#000';
+        canvas.moveTo(this.x0.x, this.x0.y);
+        canvas.lineTo(this.x0.x, this.x0.y - 25);
+        canvas.lineTo(this.x0.x + 50, this.x0.y);
+        canvas.lineTo(this.x0.x, this.x0.y + 25);
+        canvas.lineTo(this.x0.x, this.x0.y);
+        canvas.closePath();
+        canvas.moveTo(this.x0.x + 64, this.x0.y);
+        canvas.arc(this.x0.x + 57, this.x0.y, 7, 0, Math.PI * 2, true);
+        canvas.stroke();
+        canvas.beginPath();
+        canvas.arc(this.x0.x + 57, this.x0.y, 6, 0, Math.PI * 2, true);
+        canvas.closePath();
+        canvas.fillStyle = this.x1.state ? colorTrue : colorFalse;
+        canvas.fill();
+        this.x0.visible = true;
+        this.x0.draw();
+    }
 }
 
 /* logical function: x1 = x0_0 and x0_1 */
@@ -49,7 +118,19 @@ function AND(ax0_0, ax0_1, ax1) {
     this.x1 = ax1;
     this.x1.state = (!!this.x00.state) && (!!this.x01.state);
     ax1.state = this.x1.state;
-    this.type = 'AND';
+    this.draw = function() {
+        canvas.strokeStyle = '#000';
+        canvas.lineWidth = 2;
+        canvas.strokeRect(this.x00.x, this.x00.y - 20, 60, 100);
+        canvas.fillStyle = "#000";
+        canvas.fillText("&", this.x00.x + 30, this.x1.y);
+        this.x00.visible = true;
+        this.x00.draw();
+        this.x01.visible = true;
+        this.x01.draw();
+        this.x1.visible = true;
+        this.x1.draw();
+    }
 }
 
 /* logical function: x1 = x0_0 or x0_1 */
@@ -59,7 +140,19 @@ function OR(ax0_0, ax0_1, ax1) {
     this.x1 = ax1;
     this.x1.state = (!!this.x00.state) + (!!this.x01.state);
     ax1.state = !!this.x1.state;
-    this.type = 'OR';
+    this.draw = function() {
+        canvas.strokeStyle = '#000';
+        canvas.lineWidth = 2;
+        canvas.strokeRect(this.x00.x, this.x00.y - 20, 60, 100);
+        canvas.fillStyle = "#000";
+        canvas.fillText("1", this.x00.x + 30, this.x1.y);
+        this.x00.visible = true;
+        this.x00.draw();
+        this.x01.visible = true;
+        this.x01.draw();
+        this.x1.visible = true;
+        this.x1.draw();
+    }
 }
 
 /* JK flip-flop */
@@ -75,133 +168,42 @@ function JK(aJ, aK, aC, aQ) {
         if (this.J.state && this.K.state) this.state = !this.state;
     }
     aQ.state = this.state;
-    this.type = 'JK';
-}
-
-/* DRAW PART */
-
-var canvas = document.getElementById('test').getContext('2d');
-var colorTrue = '#f5bb15';
-var colorFalse = '#15bbf5';
-canvas.font = '11pt PT Sans';
-canvas.textAlign = 'center';
-canvas.textBaseline = 'middle';
-
-/* draw node */
-function drawX(xx) {
-    canvas.beginPath();
-    canvas.arc(xx.x, xx.y, 5, 0, Math.PI * 2, true);
-    canvas.closePath();
-    canvas.fillStyle = xx.state ? colorTrue : colorFalse;
-    canvas.fill();
-}
-
-/* draw wire */
-function drawWIRE(xwire) {
-    canvas.beginPath();
-    canvas.moveTo(xwire.x0.x, xwire.x0.y);
-    canvas.lineTo(xwire.x1.x, xwire.x1.y);
-    canvas.closePath();
-    canvas.lineWidth = 4;
-    canvas.strokeStyle = xwire.x1.state ? colorTrue : colorFalse;
-    canvas.stroke();
-}
-
-/* draw in- and outputs */
-function drawPIN(xpin) {
-    canvas.beginPath();
-    canvas.arc(xpin.x.x, xpin.x.y, 11, 0, Math.PI * 2, true);
-    canvas.closePath();
-    canvas.fillStyle = xpin.x.state ? colorTrue : colorFalse;
-    canvas.fill();
-    canvas.beginPath();
-    canvas.arc(xpin.x.x, xpin.x.y, 11, 0, Math.PI * 2, true);
-    canvas.closePath();
-    canvas.lineWidth = 2;
-    canvas.strokeStyle = 'rgba(0, 0, 0, 0.1)';
-    canvas.stroke();
-    drawX(xpin.x);
-    canvas.fillStyle = '#000';
-    canvas.fillText(xpin.state + 0, xpin.x.x, xpin.x.y);
-}
-
-/* draw OR */
-function drawOR(xor) {
-    canvas.strokeStyle = '#000';
-    canvas.lineWidth = 2;
-    canvas.strokeRect(xor.x00.x, xor.x00.y - 20, 60, 100);
-    drawX(xor.x00);
-    drawX(xor.x01);
-    drawX(xor.x1);
-    canvas.fillStyle = "#000";
-    canvas.fillText("1", xor.x00.x + 30, xor.x1.y);
-}
-
-/* draw AND */
-function drawAND(xand) {
-    canvas.strokeStyle = '#000';
-    canvas.lineWidth = 2;
-    canvas.strokeRect(xand.x00.x, xand.x00.y - 20, 60, 100);
-    drawX(xand.x00);
-    drawX(xand.x01);
-    drawX(xand.x1);
-    canvas.fillStyle = "#000";
-    canvas.fillText("&", xand.x00.x + 30, xand.x1.y);
-}
-
-/* draw NOT */
-function drawNOT(xnot) {
-    canvas.beginPath();
-    canvas.lineWidth = 2;
-    canvas.strokeStyle = '#000';
-    canvas.moveTo(xnot.x0.x, xnot.x0.y);
-    canvas.lineTo(xnot.x0.x, xnot.x0.y - 25);
-    canvas.lineTo(xnot.x0.x + 50, xnot.x0.y);
-    canvas.lineTo(xnot.x0.x, xnot.x0.y + 25);
-    canvas.lineTo(xnot.x0.x, xnot.x0.y);
-    canvas.closePath();
-    canvas.moveTo(xnot.x0.x + 64, xnot.x0.y);
-    canvas.arc(xnot.x0.x + 57, xnot.x0.y, 7, 0, Math.PI * 2, true);
-    canvas.stroke();
-    drawX(xnot.x0);
-    canvas.beginPath();
-    canvas.arc(xnot.x0.x + 57, xnot.x0.y, 6, 0, Math.PI * 2, true);
-    canvas.closePath();
-    canvas.fillStyle = xnot.x1.state ? colorTrue : colorFalse;
-    canvas.fill();
-}
-
-/* draw JK flip-flop */
-function drawJK(xJK) {
-    canvas.strokeStyle = '#000';
-    canvas.lineWidth = 2;
-    canvas.strokeRect(xJK.J.x, xJK.J.y - 20, 60, 100);
-    drawX(xJK.J);
-    drawX(xJK.C);
-    drawX(xJK.K);
-    drawX(xJK.Q);
-    canvas.fillStyle = "#000";
-    canvas.fillText("J", xJK.J.x + 10, xJK.J.y);
-    canvas.fillText("K", xJK.K.x + 10, xJK.K.y);
-    canvas.fillText("C", xJK.C.x + 10, xJK.C.y);
-    canvas.fillText("Q", xJK.Q.x - 11, xJK.Q.y);
-    canvas.fillText("JK", xJK.J.x + 30, xJK.C.y);
-    canvas.lineWidth = 0.5;
-    canvas.beginPath();
-    canvas.moveTo(xJK.J.x + 18, xJK.J.y - 20);
-    canvas.lineTo(xJK.J.x + 18, xJK.K.y + 20);
-    canvas.moveTo(xJK.Q.x - 18, xJK.K.y + 20);
-    canvas.lineTo(xJK.Q.x - 18, xJK.J.y - 20);
-    canvas.closePath();
-    canvas.strokeStyle = '#000';
-    canvas.stroke();
+    this.draw = function() {
+        canvas.strokeStyle = '#000';
+        canvas.lineWidth = 2;
+        canvas.strokeRect(this.J.x, this.J.y - 20, 60, 100);
+        canvas.fillStyle = "#000";
+        canvas.fillText("J", this.J.x + 10, this.J.y);
+        canvas.fillText("K", this.K.x + 10, this.K.y);
+        canvas.fillText("C", this.C.x + 10, this.C.y);
+        canvas.fillText("Q", this.Q.x - 11, this.Q.y);
+        canvas.fillText("JK", this.J.x + 30, this.C.y);
+        canvas.lineWidth = 0.3;
+        canvas.beginPath();
+        canvas.moveTo(this.J.x + 18, this.J.y - 20);
+        canvas.lineTo(this.J.x + 18, this.K.y + 20);
+        canvas.moveTo(this.Q.x - 18, this.K.y + 20);
+        canvas.lineTo(this.Q.x - 18, this.J.y - 20);
+        canvas.moveTo(this.Q.x - 18, this.K.y - 20);
+        canvas.closePath();
+        canvas.strokeStyle = '#000';
+        canvas.stroke();
+        this.J.visible = true;
+        this.J.draw();
+        this.K.visible = true;
+        this.K.draw();
+        this.C.visible = true;
+        this.C.draw();
+        this.Q.visible = true;
+        this.Q.draw();
+    }
 }
 
 /* TEST PART */
 
 var wire = []; var el = [];
 
-/* тест 1: умножение 1 на инверсию другой 1 */
+/* тест 1: умножение "1" на инверсию другой "1" */
 var node = [new X(50, 40), new X(100, 40), new X(157, 40), new X(210, 40)];
 node = node.concat(/* 4 */ new X(50, 100), new X(210, 100), new X(270, 70), new X(320, 70));
 /* тест 2: сложение сигнала со своей инверсией */
@@ -250,13 +252,6 @@ el.push(new OUTPUT(node[24])); // Q
 // -------------------------------------
 
 /* отрисовка */
-for (i in wire) { drawWIRE(wire[i]) }
-for (i in node) { if (node[i].draw) drawX(node[i]) }
-
-for (i in el) {
-    if (el[i].type == 'AND') drawAND(el[i]);
-    if (el[i].type == 'OR') drawOR(el[i]);
-    if (el[i].type == 'NOT') drawNOT(el[i]);
-    if (el[i].type == 'PIN') drawPIN(el[i]);
-    if (el[i].type == 'JK') drawJK(el[i]);
-}
+for (i in wire) { wire[i].draw() }
+for (i in node) { node[i].draw() }
+for (i in el) { el[i].draw() }
