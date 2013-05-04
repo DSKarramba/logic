@@ -8,6 +8,7 @@ canvas.textBaseline = 'middle';
 /* double negative is used to work with boolean variables */
 /* logical node */
 function X(cx, cy, /* 'true' for connections */ visible, /* optional */ cstate) {
+    "use strict";
     this.x = cx;
     this.y = cy;
     this.state = (!!cstate) || false;
@@ -25,6 +26,7 @@ function X(cx, cy, /* 'true' for connections */ visible, /* optional */ cstate) 
 
 /* wire between two Xs */
 function WIRE(ax0, ax1) {
+    "use strict";
     this.x0 = ax0;
     this.x1 = ax1;
     this.x1.state = !!this.x0.state;
@@ -41,6 +43,7 @@ function WIRE(ax0, ax1) {
 
 /* logical input: 1 or 0 */
 function INPUT(ax, state) {
+    "use strict";
     this.state = !!state;
     ax.state = this.state;
     this.x = ax;
@@ -63,6 +66,7 @@ function INPUT(ax, state) {
 
 /* logical output */
 function OUTPUT(ax) {
+    "use strict";
     this.x = ax;
     this.state = !!ax.state;
     this.draw = function() {
@@ -84,6 +88,7 @@ function OUTPUT(ax) {
 
 /* logical function: x1 = not x0 */
 function NOT(ax0, ax1) {
+    "use strict";
     this.x0 = ax0;
     this.x1 = ax1;
     this.x1.state = !this.x0.state;
@@ -113,6 +118,7 @@ function NOT(ax0, ax1) {
 
 /* logical function: x1 = x0_0 and x0_1 */
 function AND(ax0_0, ax0_1, ax1) {
+    "use strict";
     this.x00 = ax0_0;
     this.x01 = ax0_1;
     this.x1 = ax1;
@@ -140,6 +146,7 @@ function AND(ax0_0, ax0_1, ax1) {
 
 /* logical function: x1 = x0_0 or x0_1 */
 function OR(ax0_0, ax0_1, ax1) {
+    "use strict";
     this.x00 = ax0_0;
     this.x01 = ax0_1;
     this.x1 = ax1;
@@ -169,6 +176,7 @@ function OR(ax0_0, ax0_1, ax1) {
 
 /* JK flip-flop */
 function JK(aJ, aK, aC, aQ) {
+    "use strict";
     this.J = aJ;
     this.K = aK;
     this.C = aC;
