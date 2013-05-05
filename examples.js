@@ -1,5 +1,6 @@
 ﻿/* example 1: "1" and not "1" */
-node = node.concat(new X(50, 40), new X(100, 40), new X(153, 40), new X(210, 40));
+node = [];
+node = node.concat(/* 0 */ new X(50, 40), new X(100, 40), new X(153, 40), new X(210, 40));
 node = node.concat(/* 4 */ new X(50, 85), new X(170, 85, 1), new X(170, 70, 1), new X(210, 70));
 node = node.concat(/* 8 */ new X(270, 55), new X(320, 55));
 
