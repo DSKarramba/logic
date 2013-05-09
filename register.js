@@ -1,3 +1,5 @@
+/* 4 bit register based on JK flip-flops */
+
 node = [];
 node = node.concat(new X(280, 215), new X(280, 195, 1), new X(170, 40), new X(75, 100, 1));
 node = node.concat(new X(85, 100), new X(145, 100), new X(170, 100), new X(145, 175));
@@ -108,7 +110,7 @@ function reload() {
     for (i in node) { node[i].draw() }
     for (i in el) { el[i].draw() }
 
-    outoftime = setTimeout("reload()", 1000);
+    setTimeout("reload()", 1000);
 }
 
 reload();

@@ -89,7 +89,7 @@ function reload() {
     for (i in node) { node[i].draw() }
     for (i in el) { el[i].draw() }
 
-    outoftime = setTimeout("reload()", 500);
+    setTimeout("reload()", 500);
 }
 
 reload();
