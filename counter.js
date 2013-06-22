@@ -15,14 +15,17 @@ node = node.concat(new X(485, 180, 1), new X(125, 180, 1), new X(125, 200));
 
 var counterIN = [true, false, false, false, false];
 function counter3bit(/* arrays */ el, wire, inputs) {
+    el.push(new TEXT(275, 10, 'Трехбитный счетчик'));
     // J, K #1
     el.push(new INPUT(node[0], inputs[0]));
+    el.push(new TEXT(20, 40, '"1"'));
     wire.push(new WIRE(node[0], node[1]));
     wire.push(new WIRE(node[1], node[2]));
     wire.push(new WIRE(node[1], node[3]));
     wire.push(new WIRE(node[3], node[4]));
     // C
     el.push(new INPUT(node[5], inputs[1]));
+    el.push(new TEXT(25, 70, 'C'));
     wire.push(new WIRE(node[5], node[6]));
     wire.push(new WIRE(node[6], node[13]));
     wire.push(new WIRE(node[6], node[14]));
@@ -69,6 +72,7 @@ function counter3bit(/* arrays */ el, wire, inputs) {
     wire.push(new WIRE(node[40], node[41]));
     wire.push(new WIRE(node[41], node[42]));
     el.push(new OUTPUT(node[42]));
+    el.push(new TEXT(80, 200, 'OUT'));
     
     dataout = [node[7].state, node[18].state, node[38].state];
     return dataout;

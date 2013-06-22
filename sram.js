@@ -53,8 +53,6 @@ node = node.concat(new X(1395, 535), new X(1410, 535), new X(1470, 550), new X(1
 node = node.concat(new X(1480, 550, 1), new X(1480, 475, 1), new X(1490, 475), new X(1520, 475)); // 196-199
 node = node.concat(new X(1535, 475, 1), new X(1535, 600, 1), new X(450, 600, 1), new X(450, 530)); // 200-203
 
-var rnw = 0;
-var ramIN = [false, false, false, false, false, false, false];
 function sram4bit(/* arrays */ el, wire, inputs) {
     el.push(new TEXT(400, 20, 'Память 4x1'));
     
@@ -304,6 +302,9 @@ function sram4bit(/* arrays */ el, wire, inputs) {
     out = [node[112].state, node[133].state, node[158].state, node[178].state];
     return out;
 }
+
+var rnw = 0;
+var ramIN = [false, false, false, false, false, false, false];
 
 function reload() {
     var wire = []; var el = [];

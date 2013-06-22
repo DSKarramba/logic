@@ -4,6 +4,7 @@ var colorFalse = '#15bbf5';
 var colorZ = '#f515bb';
 canvas.font = '11pt PT Sans';
 canvas.textBaseline = 'middle';
+var Z = {Z: '', z: ''};
 
 /* double negative is used to work with boolean variables */
 /* logical node */
@@ -11,14 +12,14 @@ function X(cx, cy, /* 'true' for connections */ visible, /* optional */ cstate) 
     "use strict";
     this.x = cx;
     this.y = cy;
-    this.state = (cstate == 'Z') ? 'Z' : (!!cstate || false);
+    this.state = (cstate in Z) ? 'Z' : (!!cstate || false);
     this.visible = (!!visible) || false;
     this.draw = function () {
         if (this.visible) {
             canvas.beginPath();
             canvas.arc(this.x, this.y, 4, 0, Math.PI * 2, true);
             canvas.closePath();
-            if (this.state == 'Z') canvas.fillStyle = colorZ;
+            if (this.state in Z) canvas.fillStyle = colorZ;
             else canvas.fillStyle = this.state ? colorTrue : colorFalse;
             canvas.fill();
         }
@@ -30,14 +31,14 @@ function WIRE(ax0, ax1) {
     "use strict";
     this.x0 = ax0;
     this.x1 = ax1;
-    this.x1.state = (this.x0.state == 'Z') ? 'Z' : !!this.x0.state;
+    this.x1.state = (this.x0.state in Z) ? 'Z' : !!this.x0.state;
     this.draw = function () {
         canvas.beginPath();
         canvas.moveTo(this.x0.x, this.x0.y);
         canvas.lineTo(this.x1.x, this.x1.y);
         canvas.closePath();
         canvas.lineWidth = 4;
-        if (this.x1.state == 'Z') canvas.strokeStyle = colorZ;
+        if (this.x1.state in Z) canvas.strokeStyle = colorZ;
         else canvas.strokeStyle = this.x1.state ? colorTrue : colorFalse;
         canvas.stroke();
     }
@@ -46,14 +47,14 @@ function WIRE(ax0, ax1) {
 /* logical input: 1 or 0 */
 function INPUT(ax, state) {
     "use strict";
-    this.state = (state == 'Z') ? 'Z' : !!state;
+    this.state = (state in Z) ? 'Z' : !!state;
     ax.state = this.state;
     this.x = ax;
     this.draw = function () {
         canvas.beginPath();
         canvas.arc(this.x.x, this.x.y, 11, 0, Math.PI * 2, true);
         canvas.closePath();
-        if (this.x.state == 'Z') canvas.fillStyle = colorZ;
+        if (this.x.state in Z) canvas.fillStyle = colorZ;
         else canvas.fillStyle = this.x.state ? colorTrue : colorFalse;
         canvas.fill();
         canvas.beginPath();
@@ -64,7 +65,7 @@ function INPUT(ax, state) {
         canvas.stroke();
         canvas.fillStyle = '#000';
         canvas.textAlign = 'center';
-        var ttext = (this.state == 'Z') ? 'Z' : this.state + 0;
+        var ttext = (this.state in Z) ? 'Z' : this.state + 0;
         canvas.fillText(ttext, this.x.x, this.x.y);
     }
 }
@@ -73,12 +74,12 @@ function INPUT(ax, state) {
 function OUTPUT(ax) {
     "use strict";
     this.x = ax;
-    this.state = (ax.state == 'Z') ? 'Z' : !!ax.state;
+    this.state = (ax.state in Z) ? 'Z' : !!ax.state;
     this.draw = function () {
         canvas.beginPath();
         canvas.arc(this.x.x, this.x.y, 11, 0, Math.PI * 2, true);
         canvas.closePath();
-        if (this.x.state == 'Z') canvas.fillStyle = colorZ;
+        if (this.x.state in Z) canvas.fillStyle = colorZ;
         else canvas.fillStyle = this.x.state ? colorTrue : colorFalse;
         canvas.fill();
         canvas.beginPath();
@@ -89,7 +90,7 @@ function OUTPUT(ax) {
         canvas.stroke();
         canvas.fillStyle = '#000';
         canvas.textAlign = 'center';
-        var ttext = (this.state == 'Z') ? 'Z' : this.state + 0;
+        var ttext = (this.state in Z) ? 'Z' : this.state + 0;
         canvas.fillText(ttext, this.x.x, this.x.y);
     }
 }
@@ -99,7 +100,7 @@ function NOT(ax0, ax1) {
     "use strict";
     this.x0 = ax0;
     this.x1 = ax1;
-    this.x1.state = (this.x0.state == 'Z') ? 'Z' : !this.x0.state;
+    this.x1.state = (this.x0.state in Z) ? 'Z' : !this.x0.state;
     ax1.state = this.x1.state;
     this.draw = function () {
         canvas.beginPath();
@@ -117,7 +118,7 @@ function NOT(ax0, ax1) {
         canvas.beginPath();
         canvas.arc(this.x0.x + 53, this.x0.y, 6, 0, Math.PI * 2, true);
         canvas.closePath();
-        if (this.x1.state == 'Z') canvas.fillStyle = colorZ;
+        if (this.x1.state in Z) canvas.fillStyle = colorZ;
         else canvas.fillStyle = this.x1.state ? colorTrue : colorFalse;
         canvas.fill();
         this.x0.visible = true; this.x0.draw();
@@ -131,7 +132,7 @@ function AND(ax0_0, ax0_1, ax1) {
     this.x00 = ax0_0;
     this.x01 = ax0_1;
     this.x1 = ax1;
-    if (this.x00.state == 'Z' || this.x01.state == 'Z') this.x1.state = 'Z';
+    if (this.x00.state in Z || this.x01.state in Z) this.x1.state = 'Z';
     else this.x1.state = (!!this.x00.state) && (!!this.x01.state);
     ax1.state = this.x1.state;
     this.draw = function () {
@@ -160,11 +161,11 @@ function OR(ax0_0, ax0_1, ax1) {
     this.x00 = ax0_0;
     this.x01 = ax0_1;
     this.x1 = ax1;
-    if (this.x00.state == 'Z' && this.x01.state == 'Z') this.x1.state = 'Z';
-    else if (this.x00.state == 'Z' && this.x01.state != 'Z') this.x1.state = !!this.x01.state;
-    else if (this.x00.state != 'Z' && this.x01.state == 'Z') this.x1.state = !!this.x00.state;
+    if (this.x00.state in Z && this.x01.state in Z) this.x1.state = 'Z';
+    else if (this.x00.state in Z && !(this.x01.state in Z)) this.x1.state = !!this.x01.state;
+    else if (!(this.x00.state in Z) && this.x01.state in Z) this.x1.state = !!this.x00.state;
     else this.x1.state = (!!this.x00.state) + (!!this.x01.state);
-    ax1.state = (this.x1.state == 'Z') ? 'Z' : !!this.x1.state;
+    ax1.state = (this.x1.state in Z) ? 'Z' : !!this.x1.state;
     this.draw = function () {
         canvas.strokeStyle = '#000';
         canvas.lineWidth = 2;
@@ -195,12 +196,12 @@ function JK(aJ, aK, aC, aQ, astate) {
     this.K = aK;
     this.C = aC;
     this.Q = aQ;
-    this.state = (astate == 'Z') ? 'Z' : (!!astate || false);
+    this.state = (astate in Z) ? 'Z' : (!!astate || false);
     if (this.C.state) {
-        if (this.J.state == 'Z' || this.K.state == 'Z') this.state = 'Z';
+        if (this.J.state in Z || this.K.state in Z) this.state = 'Z';
         else if (!this.J.state && this.K.state) this.state = false;
         else if (this.J.state && !this.K.state) this.state = true;
-        else if (!this.J.state && !this.K.state) this.state = (this.state == 'Z') ? 'Z' : (!!this.state || false);
+        else if (!this.J.state && !this.K.state) this.state = (this.state in Z) ? 'Z' : (!!this.state || false);
         else this.state = !this.state;
     }
     aQ.state = this.state;
@@ -238,13 +239,13 @@ function RS(aS, aR, aC, aQ, astate) {
     this.S = aS;
     this.C = aC;
     this.Q = aQ;
-    this.state = (astate == 'Z') ? 'Z' : (!!astate || false);
+    this.state = (astate in Z) ? 'Z' : (!!astate || false);
     if (this.C.state) {
-        if (this.R.state == 'Z' || this.S.state == 'Z') this.state = 'Z';
+        if (this.R.state in Z || this.S.state in Z) this.state = 'Z';
         else if (!this.R.state && this.S.state) this.state = true;
         else if (this.R.state && !this.S.state) this.state = false;
         else if (this.R.state && this.S.state) this.state = 'Z';
-        else this.state = (this.state == 'Z') ? 'Z' : (!!this.state || false);
+        else this.state = (this.state in Z) ? 'Z' : (!!this.state || false);
     }
     aQ.state = this.state;
     this.draw = function () {
@@ -280,13 +281,14 @@ function BTRI(In, oen, out) {
     this.din = In;
     this.oen = oen;
     this.dout = out;
-    if (this.oen.state == false) this.dout.state = (this.din.state == 'Z') ? 'Z' : !!this.din.state;
+    if (this.oen.state == false || this.oen.state in Z)
+        this.dout.state = (this.din.state in Z) ? 'Z' : !!this.din.state;
     else this.dout.state = 'Z';
     out.state = this.dout.state;
     this.draw = function () {
-        if (this.oen.state == 'Z') canvas.fillStyle = colorZ;
+        if (this.oen.state in Z) canvas.fillStyle = colorTrue;
         else canvas.fillStyle = !this.oen.state ? colorTrue : colorFalse;
-        if (oen.state == 'Z') canvas.strokeStyle = colorZ;
+        if (oen.state in Z) canvas.strokeStyle = colorZ;
         else canvas.strokeStyle = oen.state ? colorTrue : colorFalse;
         canvas.beginPath();
         canvas.lineWidth = 4;

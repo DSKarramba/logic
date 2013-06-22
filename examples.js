@@ -7,6 +7,7 @@ node = node.concat(/* 4 */ new X(50, 85), new X(170, 85, 1), new X(170, 70, 1), 
 node = node.concat(/* 8 */ new X(270, 55), new X(320, 55));
 
 function example1(/* arrays */ el, wire, inputs) {
+    el.push(new TEXT(155, 15, '"1" и не "1"'));
     el.push(new INPUT(node[0], inputs[0]));
     wire.push(new WIRE(node[0], node[1]));
     el.push(new NOT(node[1], node[2]));
@@ -28,6 +29,7 @@ node = node.concat(/* 14 */ new X(260, 200), new X(100, 245, 1), new X(170, 245,
 node = node.concat(/* 17 */ new X(170, 230, 1), new X(260, 230), new X(320, 215), new X(370, 215));
 
 function example2(first, /* arrays */ el, wire, inputs) {
+    el.push(new TEXT(85, 165, 'Сложение сигнала со своим отрицанием'));
     el.push(new INPUT(node[first], inputs[0]));
     wire.push(new WIRE(node[first], node[first + 1]));
     wire.push(new WIRE(node[first + 1], node[first + 2]));
@@ -51,6 +53,7 @@ node = node.concat(/* 25 */ new X(50, 390), new X(150, 390), new X(210, 390), ne
 var JKin = [true, false, false, false]; // start levels of input signals
 
 function example3(first, /* arrays */ el, wire, inputs) {
+    el.push(new TEXT(80, 325, 'JK-триггер'));
     el.push(new INPUT(node[first], inputs[0])); // J
     wire.push(new WIRE(node[first], node[first + 1]));
     el.push(new INPUT(node[first + 2], inputs[1])); // K
@@ -71,6 +74,7 @@ node = node.concat(/* 33 */ new X(350, 390), new X(450, 390), new X(510, 390), n
 var RSin = [true, false, false, false]; // start levels of input signals
 
 function example4(first, /* arrays */ el, wire, inputs) {
+    el.push(new TEXT(380, 325, 'RS-триггер'));
     el.push(new INPUT(node[first], inputs[0])); // S
     wire.push(new WIRE(node[first], node[first + 1]));
     el.push(new INPUT(node[first + 2], inputs[1])); // R
@@ -90,6 +94,7 @@ node = node.concat(/* 41 */ new X(130, 500), new X(180, 500));
 
 var BTRIin = [true, true];
 function example5(first, /* arrays */ el, wire, inputs) {
+    el.push(new TEXT(20, 470, 'Пример использования Z-состояния'));
     el.push(new INPUT(node[first], inputs[0]));
     el.push(new INPUT(node[first + 1], inputs[1]));
     wire.push(new WIRE(node[first], node[first + 2]));
