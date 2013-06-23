@@ -1,14 +1,6 @@
-var canvas = document.getElementById('test').getContext('2d');
-var colorTrue = '#f5bb15';
-var colorFalse = '#15bbf5';
-var colorZ = '#f515bb';
-canvas.font = '11pt PT Sans';
-canvas.textBaseline = 'middle';
-var Z = {Z: '', z: ''};
-
 /* double negative is used to work with boolean variables */
 /* logical node */
-function X(cx, cy, /* 'true' for connections */ visible, /* optional */ cstate) {
+function X(canvas, cx, cy, /* 'true' for connections */ visible, /* optional */ cstate) {
     "use strict";
     this.x = cx;
     this.y = cy;
@@ -27,7 +19,7 @@ function X(cx, cy, /* 'true' for connections */ visible, /* optional */ cstate) 
 }
 
 /* wire between two Xs */
-function WIRE(ax0, ax1) {
+function WIRE(canvas, ax0, ax1) {
     "use strict";
     this.x0 = ax0;
     this.x1 = ax1;
@@ -45,7 +37,7 @@ function WIRE(ax0, ax1) {
 }
 
 /* logical input: 1 or 0 */
-function INPUT(ax, state) {
+function INPUT(canvas, ax, state) {
     "use strict";
     this.state = (state in Z) ? 'Z' : !!state;
     ax.state = this.state;
@@ -71,7 +63,7 @@ function INPUT(ax, state) {
 }
 
 /* logical output */
-function OUTPUT(ax) {
+function OUTPUT(canvas, ax) {
     "use strict";
     this.x = ax;
     this.state = (ax.state in Z) ? 'Z' : !!ax.state;
@@ -96,7 +88,7 @@ function OUTPUT(ax) {
 }
 
 /* logical function: x1 = not x0 */
-function NOT(ax0, ax1) {
+function NOT(canvas, ax0, ax1) {
     "use strict";
     this.x0 = ax0;
     this.x1 = ax1;
@@ -127,7 +119,7 @@ function NOT(ax0, ax1) {
 }
 
 /* logical function: x1 = x0_0 and x0_1 */
-function AND(ax0_0, ax0_1, ax1) {
+function AND(canvas, ax0_0, ax0_1, ax1) {
     "use strict";
     this.x00 = ax0_0;
     this.x01 = ax0_1;
@@ -156,7 +148,7 @@ function AND(ax0_0, ax0_1, ax1) {
 }
 
 /* logical function: x1 = x0_0 or x0_1 */
-function OR(ax0_0, ax0_1, ax1) {
+function OR(canvas, ax0_0, ax0_1, ax1) {
     "use strict";
     this.x00 = ax0_0;
     this.x01 = ax0_1;
@@ -190,7 +182,7 @@ function OR(ax0_0, ax0_1, ax1) {
 }
 
 /* JK flip-flop */
-function JK(aJ, aK, aC, aQ, astate) {
+function JK(canvas, aJ, aK, aC, aQ, astate) {
     "use strict";
     this.J = aJ;
     this.K = aK;
@@ -233,7 +225,7 @@ function JK(aJ, aK, aC, aQ, astate) {
 }
 
 /* RS flip-flop */
-function RS(aS, aR, aC, aQ, astate) {
+function RS(canvas, aS, aR, aC, aQ, astate) {
     "use strict";
     this.R = aR;
     this.S = aS;
@@ -276,7 +268,7 @@ function RS(aS, aR, aC, aQ, astate) {
 }
 
 /* logical element: if (!oen) out = in, else -- out = 'Z' */
-function BTRI(In, oen, out) {
+function BTRI(canvas, In, oen, out) {
     "use strict";
     this.din = In;
     this.oen = oen;
@@ -320,7 +312,7 @@ function BTRI(In, oen, out) {
 }
 
 /* outputs text on canvas */
-function TEXT(x, y, text) {
+function TEXT(canvas, x, y, text) {
     "use strict";
     this.draw = function () {
         canvas.fillStyle = "#000";
@@ -330,6 +322,6 @@ function TEXT(x, y, text) {
 }
 
 /* clears canvas */
-function clear() {
+function clear(canvas) {
     canvas.clearRect(0, 0, canvas.canvas.width, canvas.canvas.height);
 }
