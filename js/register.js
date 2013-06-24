@@ -20,7 +20,7 @@ var regIN = [true, false, false, false, false, false];
 function register4bit(/* arrays */ el, wire, inputs) {
     // C
     el.push(new INPUT(node[7], inputs[1]));
-    el.push(new TEXT(120, 175, 'C'));
+    el.push(new TEXT(120, 165, 'C'));
     wire.push(new WIRE(node[7], node[58]));
     wire.push(new WIRE(node[58], node[8]));
     wire.push(new WIRE(node[8], node[9]));
@@ -36,7 +36,7 @@ function register4bit(/* arrays */ el, wire, inputs) {
     wire.push(new WIRE(node[42], node[43]));
     // J, K #1
     el.push(new INPUT(node[0], inputs[0]));
-    el.push(new TEXT(300, 215, 'IN'));
+    el.push(new TEXT(300, 205, 'IN'));
     wire.push(new WIRE(node[0], node[1]));
     wire.push(new WIRE(node[1], node[56]));
     wire.push(new WIRE(node[56], node[3]));
@@ -93,7 +93,7 @@ function register4bit(/* arrays */ el, wire, inputs) {
     wire.push(new WIRE(node[53], node[54]));
     wire.push(new WIRE(node[54], node[55]));
     el.push(new OUTPUT(node[55]));
-    el.push(new TEXT(120, 215, 'OUT'));
+    el.push(new TEXT(120, 205, 'OUT'));
     out = [node[11].state, node[22].state, node[33].state, node[44].state];
     return out;
 }
