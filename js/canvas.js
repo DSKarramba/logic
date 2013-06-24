@@ -1,35 +1,14 @@
-/* using this w/o 'logic.js' is stupid */
-
-var grid = document.getElementById('grid').getContext('2d');
 var static = document.getElementById('static').getContext('2d');
 var dynamic = document.getElementById('dynamic').getContext('2d');
 
-static.canvas.width = dynamic.canvas.width = grid.canvas.width;
-static.canvas.height = dynamic.canvas.height = grid.canvas.height;
+dynamic.canvas.width = static.canvas.width;
+dynamic.canvas.height = static.canvas.height;
 
 var colorTrue = '#f5bb15';
 var colorFalse = '#15bbf5';
 var colorZ = '#f515bb';
 static.font = dynamic.font = '11pt PT Sans';
 static.textBaseline = dynamic.textBaseline = 'middle';
-
-function createGrid(dx) {
-    grid.lineWidth = 1;
-    grid.strokeStyle = "rgba(0, 0, 0, .15)";
-    var width = grid.canvas.width, height = grid.canvas.height;
-    grid.beginPath();
-    for (var i = dx; i < width; i = i + dx) {
-          grid.moveTo(i, 0);
-          grid.lineTo(i, height);
-    }
-    for (var i = dx; i < height; i = i + dx) {
-          grid.moveTo(0, i);
-          grid.lineTo(width, i);
-    }
-    grid.moveTo(dx, 0);
-    grid.closePath();
-    grid.stroke();
-}
 
 Xdraw = function () {
     if (this.visible) {
