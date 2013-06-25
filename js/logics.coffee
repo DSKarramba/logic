@@ -1,58 +1,88 @@
 # состояния: 0 (выкл), 1 (вкл) и -1 (Z-состояние)
-ON = value: 1, text: "1", color: "#f5bb15"
-OFF = value: 0, text: "0", color: "#15bbf5"
+ONE = value: 1, text: "1", color: "#f5bb15"
+NULL = value: 0, text: "0", color: "#15bbf5"
 Z = value: -1, text: "Z", color: "#f515bb"
+
+dark = (color) ->
+    switch color
+        when "#f5bb15" then "#b38400"
+        when "#15bbf5" then "#0084b3"
+        else "#b30084"
 
 state_from_value = (value) ->
     if not value
-        state = OFF
+        state = NULL
     else if value > 0
-        state = ON
+        state = ONE
     else state = Z
     return state
 
 class Node
-    constructor: (@ctx, @x, @y, @visible=false, @state=OFF) ->
+    constructor: (@ctx, @x, @y) ->
+        @visible=false
+        @state=NULL
+        @connected=false
+        @wires=[]
+        @element=false
+
+    add_wire: (wire) ->
+        @wires.push(wire)
+
+    get_wires: ->
+        return @wires
 
     draw: ->
         if @visible
+            @ctx.strokeStyle = dark(@state.color)
+            @ctx.fillStyle = @state.color
+            @ctx.lineWidth = 1
             @ctx.beginPath()
             @ctx.arc(@x, @y, 4, 0, Math.PI * 2, true)
             @ctx.closePath()
-            @ctx.fillStyle = @state.color
             @ctx.fill()
+            @ctx.stroke()
 
 
 class Wire
     constructor: (@ctx, @start_node, @end_node) ->
+        @start_node.add_wire(this)
+        @end_node.add_wire(this)        
+
+    link: ->
         @end_node.state = @start_node.state
-    
+        @end_node.connected = true
+
     draw: ->
-        @ctx.lineWidth = 4
-        @ctx.strokeStyle = @end_node.state.color
+        @ctx.strokeStyle = dark(@end_node.state.color)
+        @ctx.lineWidth = 1
+        @ctx.fillStyle = @end_node.state.color
         @ctx.beginPath()
-        @ctx.moveTo(@start_node.x, @start_node.y)
-        @ctx.lineTo(@end_node.x, @end_node.y)
+        @ctx.rect(@start_node.x-2, @start_node.y-2, @end_node.x-@start_node.x+4, @end_node.y-@start_node.y+4)
         @ctx.closePath()
+        @ctx.fill()
         @ctx.stroke()
 
 
 # logical input: 1 or 0 
 class Input
-    constructor: (@ctx, @node, @state) ->
-        @node.state = @state
+    constructor: (@ctx, @node) ->
     
+    sync: ->
+        @node.state = @state
+        @node.connected = true
+    
+    set_state: (state) ->
+        @state = state
+        @sync()
+
     draw: ->
-        @ctx.beginPath()
-        @ctx.arc(@node.x, @node.y, 11, 0, Math.PI * 2, true)
-        @ctx.closePath()
+        @ctx.lineWidth = 1
+        @ctx.strokeStyle = dark(@node.state.color)
         @ctx.fillStyle = @node.state.color
-        @ctx.fill()
         @ctx.beginPath()
         @ctx.arc(@node.x, @node.y, 11, 0, Math.PI * 2, true)
         @ctx.closePath()
-        @ctx.lineWidth = 2
-        @ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'
+        @ctx.fill()
         @ctx.stroke()
         @ctx.fillStyle = '#000'
         @ctx.textAlign = 'center'  
@@ -62,7 +92,10 @@ class Input
 # logical output
 class Output
     constructor: (@ctx, @node) ->
+
+    sync: ->    
         @state = @node.state
+        @node.connected = true
     
     draw: ->
         @ctx.beginPath()
@@ -70,11 +103,8 @@ class Output
         @ctx.closePath()
         @ctx.fillStyle = @node.state.color
         @ctx.fill()
-        @ctx.beginPath()
-        @ctx.arc(@node.x, @node.y, 11, 0, Math.PI * 2, true)
-        @ctx.closePath()
-        @ctx.lineWidth = 2
-        @ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'
+        @ctx.lineWidth = 1
+        @ctx.strokeStyle = dark(@node.state.color)
         @ctx.stroke()
         @ctx.fillStyle = '#000'
         @ctx.textAlign = 'center'
@@ -84,12 +114,20 @@ class Output
 #  logical function: x1 = not x0 
 class Not
     constructor: (@ctx, @in, @out) ->
-        # OFF -> ON, ON -> OFF, Z -> Z
+        @name = "Not"
+        @in.element = this
+        @out.element = this
+
+    sync: ->
         switch @in.state
-            when ON then @out.state = OFF
-            when OFF then @out.state = ON
+            when ONE then @out.state = NULL
+            when NULL then @out.state = ONE
             else @out.state = Z
+        @out.connected = true
     
+    is_ready: ->
+        return @in.connected
+
     draw: ->
         @ctx.beginPath()
         @ctx.lineWidth = 2
@@ -116,11 +154,21 @@ class Not
 #  logical function: x1 = x0_0 and x0_1 
 class And
     constructor: (@ctx, @in_0, @in_1, @out) ->
+        @name = "And"
+        @in_0.element = this
+        @in_1.element = this
+        @out.element = this
+
+    sync: ->
         if (@in_0.state is Z) or (@in_1.state is Z)
-            @out.state = OFF
+            @out.state = NULL
         else
             @out.state = state_from_value(@in_0.state.value * @in_1.state.value)
-        
+        @out.connected = true
+    
+    is_ready: ->
+        return @in_0.get_wires()[0].connected and @in_1.get_wires()[0].connected
+
     draw: ->
         @ctx.strokeStyle = '#000'
         @ctx.lineWidth = 2
@@ -182,7 +230,7 @@ class OR
 
 #  JK flip-flop 
 class JK
-    constructor: (@ctx, @J, @K, @C, @Q=OFF) ->
+    constructor: (@ctx, @J, @K, @C, @Q=NULL) ->
         if @C.state
             if (@J.state is Z) or (@K.state is Z)
                 @Q.state = Z
@@ -222,9 +270,9 @@ class JK
 
 #  RS flip-flop 
 class RS
-    constructor: (@ctx, @S, @R, @C, @Q=OFF) ->
+    constructor: (@ctx, @S, @R, @C, @Q=NULL) ->
         if @C.state
-            if (@R.state is Z) or (@S.state is Z) or (@R.state is ON) and (@S.state is ON)
+            if (@R.state is Z) or (@S.state is Z) or (@R.state is ONE) and (@S.state is ONE)
                 @Q.state = Z
             else
                 @Q.state = @S.state
@@ -261,16 +309,16 @@ class RS
 
 class BTRI
     constructor: (@ctx, @in, @oen, @out) ->
-        if (@oen.state is OFF) or (@oen.state is Z)
+        if (@oen.state is NULL) or (@oen.state is Z)
             @out.state = @in.state
         else @out.state = Z
     
     draw: ->
         if @oen.state is Z
-            @ctx.fillStyle = ON.color
+            @ctx.fillStyle = ONE.color
             @ctx.strokeStyle = Z.color
         else
-            @ctx.fillStyle = if @oen.state is NOT then ON.color else OFF.color
+            @ctx.fillStyle = if @oen.state is NOT then ONE.color else NULL.color
             @ctx.strokeStyle = @ctx.fillStyle
         @ctx.beginPath()
         @ctx.lineWidth = 4
@@ -317,37 +365,50 @@ clear = (ctx) ->
 # simple examples 
 # example 1: "1" and not "1" 
 
-example = (ctx) ->
-    wires = []
-    el = []
-    inputs = [ON,ON]
-    nodes = [new Node(ctx, 50, 40), new Node(ctx, 100, 40),
-    new Node(ctx, 153, 40), new Node(ctx, 210, 40),
-    new Node(ctx, 50, 85), new Node(ctx, 170, 85, 1),
-    new Node(ctx, 170, 70, 1), new Node(ctx, 210, 70),
-    new Node(ctx, 270, 55), new Node(ctx, 320, 55)]  
-    # draw_text(ctx, 155, 15, '"1" и не "1"')
-    el.push(new Input(ctx, nodes[0], inputs[0]))
-    wires.push(new Wire(ctx, nodes[0], nodes[1]))
-    el.push(new Not(ctx, nodes[1], nodes[2]))
-    wires.push(new Wire(ctx, nodes[2], nodes[3]))
-    el.push(new Input(ctx, nodes[4], inputs[1]))
-    wires.push(new Wire(ctx, nodes[4], nodes[5]))
-    wires.push(new Wire(ctx, nodes[5], nodes[6]))
-    wires.push(new Wire(ctx, nodes[6], nodes[7]))
-    el.push(new And(ctx, nodes[3], nodes[7], nodes[8]))
-    wires.push(new Wire(ctx, nodes[8], nodes[9]))
-    el.push(new Output(ctx, nodes[9]))
-    clear(ctx)                   # clearing ctx
-    wire.draw() for wire in wires   # drawing all wires below everything else
-    elem.draw() for elem in el      # drawing visible nodess
-    node.draw() for node in nodes
+ctx = document.getElementById('examples').getContext('2d')
+ctx.font = '11pt PT Sans'
+ctx.textBaseline = 'middle'
 
-reload = () ->
-    ctx = document.getElementById('examples').getContext('2d')
-    ctx.font = '11pt PT Sans'
-    ctx.textBaseline = 'middle'
-    example(ctx)
-    setTimeout("reload()", 1000) # time to call 'reload();'
+wires = []
+el = []
+nodes = [new Node(ctx, 50, 40), new Node(ctx, 100, 40),
+new Node(ctx, 153, 40), new Node(ctx, 210, 40),
+new Node(ctx, 50, 85), new Node(ctx, 170, 85, 1),
+new Node(ctx, 170, 70, 1), new Node(ctx, 210, 70),
+new Node(ctx, 270, 55), new Node(ctx, 320, 55)]  
+# draw_text(ctx, 155, 15, '"1" и не "1"')
+input = [new Input(ctx, nodes[0]), new Input(ctx, nodes[4])] 
+wires = [ new Wire(ctx, nodes[0], nodes[1])
+        , new Wire(ctx, nodes[2], nodes[3])
+        , new Wire(ctx, nodes[4], nodes[5])
+        , new Wire(ctx, nodes[5], nodes[6])
+        , new Wire(ctx, nodes[6], nodes[7])
+        , new Wire(ctx, nodes[8], nodes[9])]
+logics = [ new Not(ctx, nodes[1], nodes[2])
+         , new And(ctx, nodes[3], nodes[7], nodes[8])]
+output = [new Output(ctx, nodes[9])]
 
-reload()
+clear(ctx)                      # clearing ctx
+input_data = [ONE, NULL]
+inp.set_state(input_data[0]) for inp in input
+connected_nodes = []
+for inp in input
+    connected_nodes.push(inp.node)
+for i in [0..nodes.length-1]
+    node = connected_nodes[i]
+    if node.element isnt false
+        if node.element.is_ready()
+            node.element.sync()
+            connected_nodes.push(node.element.out)
+    else
+        for wire in node.get_wires()
+            if not wire.end_node.connected
+                wire.link()
+                connected_nodes.push(wire.end_node)
+out.sync() for out in output
+# сначала проставляем состояния
+wire.draw() for wire in wires   # drawing all wires below everything else
+elem.draw() for elem in input
+elem.draw() for elem in logics
+elem.draw() for elem in output
+node.draw() for node in nodes
