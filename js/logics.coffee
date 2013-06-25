@@ -1,3 +1,5 @@
+DEBUG = false
+
 # состояния: 0 (выкл), 1 (вкл) и -1 (Z-состояние)
 ONE = value: 1, text: "1", color: "#f5bb15"
 NULL = value: 0, text: "0", color: "#15bbf5"
@@ -20,7 +22,7 @@ state_from_value = (value) ->
 class Node
     constructor: (@ctx, @x, @y) ->
         @visible=false
-        @state=NULL
+        @state=Z
         @connected=false
         @wires=[]
         @element=false
@@ -56,11 +58,22 @@ class Wire
         @ctx.strokeStyle = dark(@end_node.state.color)
         @ctx.lineWidth = 1
         @ctx.fillStyle = @end_node.state.color
-        @ctx.beginPath()
-        @ctx.rect(@start_node.x-2, @start_node.y-2, @end_node.x-@start_node.x+4, @end_node.y-@start_node.y+4)
-        @ctx.closePath()
-        @ctx.fill()
-        @ctx.stroke()
+        if (@start_node.x is @end_node.x) or (@start_node.y is @end_node.y)
+            @ctx.beginPath()
+            @ctx.rect(@start_node.x-2, @start_node.y-2, @end_node.x-@start_node.x+4, @end_node.y-@start_node.y+4)
+            @ctx.closePath()
+            @ctx.fill()
+            @ctx.stroke()
+        else
+            width = @end_node.x-@start_node.x
+            height = @end_node.y-@start_node.y
+            @ctx.beginPath()
+            @ctx.rect(@start_node.x-2, @start_node.y-2, width/2, 4)
+            @ctx.rect(@start_node.x-2 + width/2, @start_node.y + 2, 4, height/Math.abs(height)*(Math.abs(height)+4))
+            @ctx.rect(@start_node.x+2+width/2, @start_node.y-2 + height, width/2, 4)
+            @ctx.closePath()
+            @ctx.fill()
+            @ctx.stroke()
 
 
 # logical input: 1 or 0 
@@ -116,7 +129,7 @@ class Not
     constructor: (@ctx, @in, @out) ->
         @name = "Not"
         @in.element = this
-        @out.element = this
+        #@out.element = this
 
     sync: ->
         switch @in.state
@@ -157,7 +170,7 @@ class And
         @name = "And"
         @in_0.element = this
         @in_1.element = this
-        @out.element = this
+        #@out.element = this
 
     sync: ->
         if (@in_0.state is Z) or (@in_1.state is Z)
@@ -167,7 +180,7 @@ class And
         @out.connected = true
     
     is_ready: ->
-        return @in_0.get_wires()[0].connected and @in_1.get_wires()[0].connected
+        return @in_0.connected and @in_1.connected
 
     draw: ->
         @ctx.strokeStyle = '#000'
@@ -192,16 +205,22 @@ class And
 
 
 #  logical function: x1 = x0_0 or x0_1 
-class OR
+class Or
     constructor: (@ctx, @in_0, @in_1, @out) ->
+        @name = "Or"
+        @in_0.element = this
+        @in_1.element = this
+        #@out.element = this
+
+    sync: ->
         if (@in_0.state is Z) and (@in_1.state is Z)
             @out.state = Z
-        else if (@in_0.state is Z) and (@in_1.state isnt Z)
-            @out.state = @in_1.state
-        else if (@in_0.state isnt Z) and (@in_1.state is Z)
-            @out.state = @in_0.state
         else
-            @out.state = state_from_value(@in_0.state.value + @in_1.state.value)
+            @out.state = state_from_value(Math.max(@in_0.state.value, @in_1.state.value))
+        @out.connected = true
+
+    is_ready: ->
+        return @in_0.connected and @in_1.connected
 
     draw: ->
         @ctx.strokeStyle = '#000'
@@ -370,35 +389,35 @@ ctx.font = '11pt PT Sans'
 ctx.textBaseline = 'middle'
 
 wires = []
-el = []
 nodes = [new Node(ctx, 50, 40), new Node(ctx, 100, 40),
 new Node(ctx, 153, 40), new Node(ctx, 210, 40),
-new Node(ctx, 50, 85), new Node(ctx, 170, 85, 1),
-new Node(ctx, 170, 70, 1), new Node(ctx, 210, 70),
+new Node(ctx, 50, 85), new Node(ctx, 210, 70),
 new Node(ctx, 270, 55), new Node(ctx, 320, 55)]  
 # draw_text(ctx, 155, 15, '"1" и не "1"')
 input = [new Input(ctx, nodes[0]), new Input(ctx, nodes[4])] 
 wires = [ new Wire(ctx, nodes[0], nodes[1])
         , new Wire(ctx, nodes[2], nodes[3])
         , new Wire(ctx, nodes[4], nodes[5])
-        , new Wire(ctx, nodes[5], nodes[6])
-        , new Wire(ctx, nodes[6], nodes[7])
-        , new Wire(ctx, nodes[8], nodes[9])]
+        , new Wire(ctx, nodes[6], nodes[7])]
 logics = [ new Not(ctx, nodes[1], nodes[2])
-         , new And(ctx, nodes[3], nodes[7], nodes[8])]
-output = [new Output(ctx, nodes[9])]
+         , new Or(ctx, nodes[3], nodes[5], nodes[6])]
+output = [new Output(ctx, nodes[7])]
 
 clear(ctx)                      # clearing ctx
-input_data = [ONE, NULL]
-inp.set_state(input_data[0]) for inp in input
+
+input[0].set_state(ONE)
+input[1].set_state(NULL)
 connected_nodes = []
 for inp in input
     connected_nodes.push(inp.node)
 for i in [0..nodes.length-1]
     node = connected_nodes[i]
+    console.log(i, connected_nodes) if DEBUG
     if node.element isnt false
+        console.log(node.element.name, node.element.is_ready()) if DEBUG
         if node.element.is_ready()
             node.element.sync()
+            console.log(node.element.out) if DEBUG
             connected_nodes.push(node.element.out)
     else
         for wire in node.get_wires()
