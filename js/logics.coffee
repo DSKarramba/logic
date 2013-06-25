@@ -5,12 +5,6 @@ ONE = value: 1, text: "1", color: "#f5bb15"
 NULL = value: 0, text: "0", color: "#15bbf5"
 Z = value: -1, text: "Z", color: "#f515bb"
 
-dark = (color) ->
-    switch color
-        when "#f5bb15" then "#b38400"
-        when "#15bbf5" then "#0084b3"
-        else "#b30084"
-
 state_from_value = (value) ->
     if not value
         state = NULL
@@ -18,6 +12,24 @@ state_from_value = (value) ->
         state = ONE
     else state = Z
     return state
+
+dark = (color) ->
+    switch color
+        when "#f5bb15" then "#b38400"
+        when "#15bbf5" then "#0084b3"
+        when "#f515bb" then "#b30084"
+        else "#000"
+
+#  outputs text on ctx 
+draw_text = (ctx, x, y, text) ->
+    ctx.fillStyle = "#000"
+    ctx.textAlign = 'left'
+    ctx.fillText(text, x, y)
+
+#  clears canvas 
+clear = (ctx) ->
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+
 
 class Node
     constructor: (@ctx, @x, @y) ->
@@ -58,6 +70,8 @@ class Wire
         @ctx.strokeStyle = dark(@end_node.state.color)
         @ctx.lineWidth = 1
         @ctx.fillStyle = @end_node.state.color
+        # не очень хорошая реализация ломаных проводов
+        # провод ломается посередине
         if (@start_node.x is @end_node.x) or (@start_node.y is @end_node.y)
             @ctx.beginPath()
             @ctx.rect(@start_node.x-2, @start_node.y-2, @end_node.x-@start_node.x+4, @end_node.y-@start_node.y+4)
@@ -122,7 +136,6 @@ class Output
         @ctx.fillStyle = '#000'
         @ctx.textAlign = 'center'
         @ctx.fillText(@state.text, @node.x, @node.y)
-
 
 #  logical function: x1 = not x0 
 class Not
@@ -247,187 +260,57 @@ class Or
         # viewable width of block ~ 70, X'able width of block = 60 
 
 
-#  JK flip-flop 
-class JK
-    constructor: (@ctx, @J, @K, @C, @Q=NULL) ->
-        if @C.state
-            if (@J.state is Z) or (@K.state is Z)
-                @Q.state = Z
-            else
-                @Q.state = state_from_value((1-@Q.state.value)*@J.state.value + @Q.state.value*(1-@K.state.value))
-                # тут возможны проблемы с Z-состоянием на выходе
-
-    draw: ->
-        @ctx.strokeStyle = '#000'
-        @ctx.lineWidth = 2
-        @ctx.textAlign = 'center'
-        @ctx.strokeRect(@J.x, @J.y - 20, 60, 100)
-        @ctx.fillStyle = "#000"
-        @ctx.fillText("J", @J.x + 10, @J.y)
-        @ctx.fillText("K", @K.x + 10, @K.y)
-        @ctx.fillText("C", @C.x + 10, @C.y)
-        @ctx.fillText("Q", @Q.x - 11, @Q.y)
-        @ctx.fillText("JK", @J.x + 30, @C.y)
-        @ctx.lineWidth = 0.3
-        @ctx.beginPath()
-        @ctx.moveTo(@J.x + 18, @J.y - 20)
-        @ctx.lineTo(@J.x + 18, @K.y + 20)
-        @ctx.moveTo(@Q.x - 18, @K.y + 20)
-        @ctx.lineTo(@Q.x - 18, @J.y - 20)
-        @ctx.moveTo(@Q.x - 18, @K.y - 20)
-        @ctx.closePath()
-        @ctx.stroke()
-        @J.visible = true
-        @J.draw()
-        @K.visible = true
-        @K.draw()
-        @C.visible = true
-        @C.draw()
-        @Q.visible = true
-        @Q.draw()
-
-
-#  RS flip-flop 
-class RS
-    constructor: (@ctx, @S, @R, @C, @Q=NULL) ->
-        if @C.state
-            if (@R.state is Z) or (@S.state is Z) or (@R.state is ONE) and (@S.state is ONE)
-                @Q.state = Z
-            else
-                @Q.state = @S.state
-
-    draw: ->
-        @ctx.strokeStyle = '#000'
-        @ctx.lineWidth = 2
-        @ctx.textAlign = 'center'
-        @ctx.strokeRect(@S.x, @S.y - 20, 60, 100)
-        @ctx.fillStyle = "#000"
-        @ctx.fillText("S", @S.x + 10, @S.y)
-        @ctx.fillText("R", @R.x + 10, @R.y)
-        @ctx.fillText("C", @C.x + 10, @C.y)
-        @ctx.fillText("Q", @Q.x - 11, @Q.y)
-        @ctx.fillText("RS", @S.x + 30, @C.y)
-        @ctx.lineWidth = 0.3
-        @ctx.beginPath()
-        @ctx.moveTo(@S.x + 18, @S.y - 20)
-        @ctx.lineTo(@S.x + 18, @R.y + 20)
-        @ctx.moveTo(@Q.x - 18, @R.y + 20)
-        @ctx.lineTo(@Q.x - 18, @S.y - 20)
-        @ctx.moveTo(@Q.x - 18, @R.y - 20)
-        @ctx.closePath()
-        @ctx.stroke()
-        @S.visible = true
-        @S.draw()
-        @R.visible = true
-        @R.draw()
-        @C.visible = true
-        @C.draw()
-        @Q.visible = true
-        @Q.draw()
-
-
-class BTRI
-    constructor: (@ctx, @in, @oen, @out) ->
-        if (@oen.state is NULL) or (@oen.state is Z)
-            @out.state = @in.state
-        else @out.state = Z
-    
-    draw: ->
-        if @oen.state is Z
-            @ctx.fillStyle = ONE.color
-            @ctx.strokeStyle = Z.color
-        else
-            @ctx.fillStyle = if @oen.state is NOT then ONE.color else NULL.color
-            @ctx.strokeStyle = @ctx.fillStyle
-        @ctx.beginPath()
-        @ctx.lineWidth = 4
-        @ctx.moveTo(@oen.x, @oen.y)
-        @ctx.lineTo(@in.x + 15, @in.y + 10)
-        @ctx.closePath()
-        @ctx.stroke()
-        @ctx.beginPath()
-        @ctx.lineWidth = 2
-        @ctx.strokeStyle = '#000'
-        @ctx.moveTo(@in.x, @in.y)
-        @ctx.lineTo(@in.x, @in.y - 16)
-        @ctx.lineTo(@in.x + 30, @in.y)
-        @ctx.lineTo(@in.x, @in.y + 16)
-        @ctx.lineTo(@in.x, @in.y)
-        @ctx.closePath()
-        @ctx.moveTo(@in.x + 15, @in.y + 10)
-        @ctx.arc(@in.x + 15, @in.y + 10, 5, 0, Math.PI * 2, true)
-        @ctx.stroke()
-        @ctx.beginPath()
-        @ctx.arc(@in.x + 15, @in.y + 10, 4, 0, Math.PI * 2, true)
-        @ctx.closePath()
-        @ctx.fill()
-        @in.visible = true
-        @in.draw()
-        @out.visible = true
-        @out.draw()        
-        @oen.visible = true
-        @oen.draw()        
-        #  width of block = 30 
-
-
-#  outputs text on @ctx 
-draw_text = (ctx, x, y, text) ->
-    ctx.fillStyle = "#000"
-    ctx.textAlign = 'left'
-    ctx.fillText(text, x, y)
-
-
-#  clears canvas 
-clear = (ctx) ->
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-
 # simple examples 
 # example 1: "1" and not "1" 
 
-ctx = document.getElementById('examples').getContext('2d')
-ctx.font = '11pt PT Sans'
-ctx.textBaseline = 'middle'
+draw_scheme = (ctx) ->
+    clear(ctx)
+    ctx.font = '11pt PT Sans'
+    ctx.textBaseline = 'middle'
+    nodes = [ new Node(ctx,  50, 40)
+        , new Node(ctx, 100, 40)
+        , new Node(ctx, 153, 40)
+        , new Node(ctx, 210, 40)
+        , new Node(ctx,  50, 85)
+        , new Node(ctx, 210, 70)
+        , new Node(ctx, 270, 55)
+        , new Node(ctx, 320, 55) ]  
+    input = [ new Input(ctx, nodes[0])
+            , new Input(ctx, nodes[4]) ] 
+    wires = [ new Wire(ctx, nodes[0], nodes[1])
+            , new Wire(ctx, nodes[2], nodes[3])
+            , new Wire(ctx, nodes[4], nodes[5])
+            , new Wire(ctx, nodes[6], nodes[7]) ]
+    logics = [ new Not(ctx, nodes[1], nodes[2])
+             , new And(ctx, nodes[3], nodes[5], nodes[6]) ]
+    output = [ new Output(ctx, nodes[7]) ]
+    
+    input[0].set_state(NULL)
+    input[1].set_state(ONE)
 
-wires = []
-nodes = [new Node(ctx, 50, 40), new Node(ctx, 100, 40),
-new Node(ctx, 153, 40), new Node(ctx, 210, 40),
-new Node(ctx, 50, 85), new Node(ctx, 210, 70),
-new Node(ctx, 270, 55), new Node(ctx, 320, 55)]  
-# draw_text(ctx, 155, 15, '"1" и не "1"')
-input = [new Input(ctx, nodes[0]), new Input(ctx, nodes[4])] 
-wires = [ new Wire(ctx, nodes[0], nodes[1])
-        , new Wire(ctx, nodes[2], nodes[3])
-        , new Wire(ctx, nodes[4], nodes[5])
-        , new Wire(ctx, nodes[6], nodes[7])]
-logics = [ new Not(ctx, nodes[1], nodes[2])
-         , new Or(ctx, nodes[3], nodes[5], nodes[6])]
-output = [new Output(ctx, nodes[7])]
+    connected_nodes = []
+    for inp in input
+        connected_nodes.push(inp.node)
+    for i in [0..nodes.length-1]
+        node = connected_nodes[i]
+        console.log(i, connected_nodes) if DEBUG
+        if node.element isnt false
+            console.log(node.element.name, node.element.is_ready()) if DEBUG
+            if node.element.is_ready()
+                node.element.sync()
+                console.log(node.element.out) if DEBUG
+                connected_nodes.push(node.element.out)
+        else
+            for wire in node.get_wires()
+                if not wire.end_node.connected
+                    wire.link()
+                    connected_nodes.push(wire.end_node)
+    out.sync() for out in output
+    # сначала проставляем состояния
+    wire.draw() for wire in wires   # drawing all wires below everything else
+    elem.draw() for elem in input
+    elem.draw() for elem in logics
+    elem.draw() for elem in output
+    node.draw() for node in nodes
 
-clear(ctx)                      # clearing ctx
-
-input[0].set_state(ONE)
-input[1].set_state(NULL)
-connected_nodes = []
-for inp in input
-    connected_nodes.push(inp.node)
-for i in [0..nodes.length-1]
-    node = connected_nodes[i]
-    console.log(i, connected_nodes) if DEBUG
-    if node.element isnt false
-        console.log(node.element.name, node.element.is_ready()) if DEBUG
-        if node.element.is_ready()
-            node.element.sync()
-            console.log(node.element.out) if DEBUG
-            connected_nodes.push(node.element.out)
-    else
-        for wire in node.get_wires()
-            if not wire.end_node.connected
-                wire.link()
-                connected_nodes.push(wire.end_node)
-out.sync() for out in output
-# сначала проставляем состояния
-wire.draw() for wire in wires   # drawing all wires below everything else
-elem.draw() for elem in input
-elem.draw() for elem in logics
-elem.draw() for elem in output
-node.draw() for node in nodes
+draw_scheme(document.getElementById('examples').getContext('2d'))
