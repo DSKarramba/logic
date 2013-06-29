@@ -2,11 +2,11 @@ var Z = {'Z': '', 'z': ''};
 
 /* BASE ELEMENTS */
 /* logical node */
-function X(x, y, visible, /* optional */ cstate) {
+function X(x, y, visible) {
     "use strict";
     this.x = x;
     this.y = y;
-    this.state = (cstate in Z) ? 'Z' : (!!cstate || false);
+    this.state = 'Z';
     this.visible = (!!visible) || false;
     this.draw = Xdraw;
 }
