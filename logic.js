@@ -54,6 +54,7 @@ function Wire(start, end) {
 
 function Input(node, state) {
     this.node = node;
+    this.node.visible = false;
     this.state = getState(state);
     this.draw = drawPin;
     this.sync = function () {
@@ -64,6 +65,7 @@ function Input(node, state) {
 
 function Output(node) {
     this.node = node;
+    this.node.visible = false;
     this.draw = drawPin;
     this.sync = function () {
         this.state = this.node.state;
@@ -77,6 +79,8 @@ function Not(inp, out) {
     this.type = 'dynamic';
     this.name = 'not';
     this.draw = drawNot;
+    this.inp.visible = true;
+    this.out.visible = false;
     this.sync = function () {
         this.out.state = (getState(this.inp.state.value) == z) ? z : getState(!this.inp.state.value);
         this.out.connected = true;
@@ -88,6 +92,9 @@ function And(inp0, inp1, out) {
     this.inp0 = inp0;
     this.inp1 = inp1;
     this.out = out;
+    this.inp0.visible = true;
+    this.inp1.visible = true;
+    this.out.visible = true;
     this.inp0.element = this;
     this.inp1.element = this;
     this.type = 'static';
@@ -104,6 +111,9 @@ function Or(inp0, inp1, out) {
     this.inp0 = inp0;
     this.inp1 = inp1;
     this.out = out;
+    this.inp0.visible = true;
+    this.inp1.visible = true;
+    this.out.visible = true;
     this.inp0.element = this;
     this.inp1.element = this;
     this.type = 'static';
@@ -123,17 +133,18 @@ function JK(J, K, C, Q, Qb) {
     this.K = K;
     this.C = C;
     this.out = Q;
-    this.type = 'static';
-    this.name = 'JK';
-    this.draw = drawJK;
-    
+    this.J.visible = true;
+    this.K.visible = true;
+    this.C.visible = true;
+    this.out.visible = true;
     this.J.element = this;
     this.C.element = this;
     this.K.element = this;
+    this.type = 'static';
+    this.name = 'JK';
+    this.draw = drawJK;
     this.sync = function () {
-        if (arguments.length == 4) {
-            this.state = Qb;
-        } else { this.state = z; }
+        this.state = getState(Qb);
         if (this.C.state == one) {
             if (this.J.state == z || this.K.state == z) {
                 this.state = z;
@@ -142,7 +153,7 @@ function JK(J, K, C, Q, Qb) {
             } else if (this.J.state.value  && !this.K.state.value) {
                 this.state = one;
             } else if (this.J.state.value  &&  this.K.state.value) {
-                this.state.value = !this.state.value;
+                this.state = getState(!this.state.value);
             }
         }
         this.out.state = this.state;
@@ -155,11 +166,18 @@ function RS(S, R, C, Q, Qb) {
     this.R = R;
     this.S = S;
     this.C = C;
-    this.Q = Q;
+    this.out = Q;
+    this.R.visible = true;
+    this.S.visible = true;
+    this.C.visible = true;
+    this.out.visible = true;
+    this.R.element = this;
+    this.C.element = this;
+    this.S.element = this;
     this.type = 'static';
     this.draw = drawRS;
     this.sync = function () {
-        this.state = Qb || z;
+        this.state = getState(Qb);
         if (this.C.state == one) {
             if (this.R.state == z || this.S.state == z) {
                 this.state = z;
@@ -171,15 +189,8 @@ function RS(S, R, C, Q, Qb) {
                 this.state = z;
             }
         }
-        this.Q.state = this.state;
-        this.Q.connected = true;
-        //this.Q.element = this;
-        //this.R.connected = true;
-        this.R.element = this;
-        //this.C.connected = true;
-        this.C.element = this;
-        //this.S.connected = true;
-        this.S.element = this;
+        this.out.state = this.state;
+        this.out.connected = true;
     };
     this.isReady = function () { return this.R.connected && this.S.connected && this.C.connected; };
 }
@@ -192,59 +203,20 @@ function Oen(inp, oen, out) {
     this.inp = inp;
     this.oen = oen;
     this.out = out;
-    this.type = 'dynamic';
-    this.draw = function () {
-        if (this.oen.state.value <= 0) {
-            ctd.strokeStyle = one.color;
-        } else { ctd.strokeStyle = zero.color; }
-        ctd.beginPath();
-        ctd.lineWidth = 4;
-        ctd.moveTo(this.oen.x, this.oen.y);
-        ctd.lineTo(this.inp.x + 15, this.inp.y + 10);
-        ctd.closePath();
-        ctd.stroke();
-        
-        ctd.beginPath();
-        ctd.lineWidth = 2;
-        ctd.strokeStyle = '#000';
-        ctd.moveTo(this.inp.x, this.inp.y);
-        ctd.lineTo(this.inp.x, this.inp.y - 16);
-        ctd.lineTo(this.inp.x + 30, this.inp.y);
-        ctd.lineTo(this.inp.x, this.inp.y + 16);
-        ctd.lineTo(this.inp.x, this.inp.y);
-        ctd.closePath();
-        ctd.fillStyle = "#fff";
-        ctd.fill();
-        ctd.stroke();
-        
-        ctd.moveTo(this.inp.x + 15, this.inp.y + 10);
-        ctd.arc(this.inp.x + 15, this.inp.y + 10, 5, 0, Math.PI * 2, true);
-        ctd.stroke();
-        
-        if (this.oen.state.value <= 0) {
-            ctd.fillStyle = one.color;
-        } else { ctd.fillStyle = zero.color; }
-        ctd.beginPath();
-        ctd.arc(this.inp.x + 15, this.inp.y + 10, 4, 0, Math.PI * 2, true);
-        ctd.closePath();
-        ctd.fill();
-        this.inp.visible = true;
-        this.inp.draw();
-        this.out.visible = true;
-        this.out.draw();
-        this.oen.visible = true;
-        this.oen.draw();
-    };
-    
+    this.inp.visible = true;
+    this.out.visible = true;
+    this.oen.visible = true;
     this.oen.element = this;
     this.inp.element = this;
+    this.type = 'dynamic';
+    this.draw = drawOen;
     this.sync = function () {
         if (this.oen.state == zero) {
             this.out.state = this.inp.state;
         } else { this.out.state = z; }
         this.out.connected = true;
     };
-    this.isReady = this.inp.connected && this.oen.connected;
+    this.isReady = function () { return this.inp.connected && this.oen.connected; };
 }
 
 // ------------------------------------
@@ -258,12 +230,9 @@ function calculate(inp, out) {
     
     for (i = 0;  i < connected_nodes.length; i++) {
         n = connected_nodes[i];
-        //console.log(i, connected_nodes, n);
         if (n.element) {
-            //console.log(n.element.name, n.element.isReady());
             if (n.element.isReady()) {
                 n.element.sync();
-                //console.log(n.element.out)
                 connected_nodes.push(n.element.out);
             };
         } else {
@@ -278,9 +247,13 @@ function calculate(inp, out) {
     for (i in out) { out[i].sync(); }
 }
 
+// ------------------------------------
+
 function transfer(node, nodes, first) {
+    var v, i;
+    if (first === undefined) { first = 0; }
     for (i = 0; i < nodes.length; i++) {
-        if (node[i + first] != undefined) {
+        if (node[i + first] !== undefined) {
             v = node[i + first].visible;
             node[i + first] = nodes[i];
             node[i + first].visible = v;

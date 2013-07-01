@@ -84,7 +84,6 @@ drawPin = function () {
     ctd.fillStyle = '#000';
     ctd.textAlign = 'center';
     ctd.fillText(this.node.state.text, this.node.x, this.node.y);
-    this.node.visible = false;
 };
 
 drawNot = function () {
@@ -107,9 +106,7 @@ drawNot = function () {
     ctd.closePath();
     ctd.fillStyle = this.out.state.color;
     ctd.fill();
-    this.inp.visible = true;
     this.inp.draw();
-    this.out.visible = false;
 };
 
 drawAnd = function () {
@@ -127,11 +124,8 @@ drawAnd = function () {
     cts.fillStyle = "#fff";
     cts.fill();
     cts.stroke();
-    this.inp0.visible = true;
     this.inp0.draw();
-    this.inp1.visible = true;
     this.inp1.draw();
-    this.out.visible = true;
     this.out.draw();
 };
 
@@ -152,11 +146,8 @@ drawOr = function () {
     cts.fillStyle = "#fff";
     cts.fill();
     cts.stroke();
-    this.inp0.visible = true;
     this.inp0.draw();
-    this.inp1.visible = true;
     this.inp1.draw();
-    this.out.visible = true;
     this.out.draw();
 };
 
@@ -182,13 +173,9 @@ drawJK = function () {
     cts.moveTo(this.out.x - 18, this.K.y - 20);
     cts.closePath();
     cts.stroke();
-    this.J.visible = true;
     this.J.draw();
-    this.K.visible = true;
     this.K.draw();
-    this.C.visible = true;
     this.C.draw();
-    this.out.visible = true;
     this.out.draw();
 };
 
@@ -203,23 +190,59 @@ drawRS = function () {
     cts.fillText("S", this.S.x + 10, this.S.y);
     cts.fillText("R", this.R.x + 10, this.R.y);
     cts.fillText("C", this.C.x + 10, this.C.y);
-    cts.fillText("Q", this.Q.x - 11, this.Q.y);
+    cts.fillText("Q", this.out.x - 11, this.out.y);
     cts.fillText("RS", this.S.x + 30, this.C.y);
     cts.lineWidth = 0.3;
     cts.beginPath();
     cts.moveTo(this.S.x + 18, this.S.y - 20);
     cts.lineTo(this.S.x + 18, this.R.y + 20);
-    cts.moveTo(this.Q.x - 18, this.R.y + 20);
-    cts.lineTo(this.Q.x - 18, this.S.y - 20);
-    cts.moveTo(this.Q.x - 18, this.R.y - 20);
+    cts.moveTo(this.out.x - 18, this.R.y + 20);
+    cts.lineTo(this.out.x - 18, this.S.y - 20);
+    cts.moveTo(this.out.x - 18, this.R.y - 20);
     cts.closePath();
     cts.stroke();
-    this.S.visible = true;
     this.S.draw();
-    this.R.visible = true;
     this.R.draw();
-    this.C.visible = true;
     this.C.draw();
-    this.Q.visible = true;
-    this.Q.draw();
+    this.out.draw();
+};
+
+drawOen = function () {
+    //if (this.oen.state.value <= 0) {
+        ctd.strokeStyle = this.oen.state.color;
+    //} else { ctd.strokeStyle = zero.color; }
+    ctd.beginPath();
+    ctd.lineWidth = 4;
+    ctd.moveTo(this.oen.x, this.oen.y);
+    ctd.lineTo(this.inp.x + 15, this.inp.y + 10);
+    ctd.closePath();
+    ctd.stroke();
+    
+    ctd.beginPath();
+    ctd.lineWidth = 2;
+    ctd.strokeStyle = '#000';
+    ctd.moveTo(this.inp.x, this.inp.y);
+    ctd.lineTo(this.inp.x, this.inp.y - 16);
+    ctd.lineTo(this.inp.x + 30, this.inp.y);
+    ctd.lineTo(this.inp.x, this.inp.y + 16);
+    ctd.lineTo(this.inp.x, this.inp.y);
+    ctd.closePath();
+    ctd.fillStyle = "#fff";
+    ctd.fill();
+    ctd.stroke();
+    
+    ctd.moveTo(this.inp.x + 15, this.inp.y + 10);
+    ctd.arc(this.inp.x + 15, this.inp.y + 10, 5, 0, Math.PI * 2, true);
+    ctd.stroke();
+    
+    if (this.oen.state.value <= 0) {
+        ctd.fillStyle = one.color;
+    } else { ctd.fillStyle = zero.color; }
+    ctd.beginPath();
+    ctd.arc(this.inp.x + 15, this.inp.y + 10, 4, 0, Math.PI * 2, true);
+    ctd.closePath();
+    ctd.fill();
+    this.inp.draw();
+    this.out.draw();
+    this.oen.draw();
 };
