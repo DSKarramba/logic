@@ -8,23 +8,14 @@ function example1(first, inputs) {
                  new Node(45, 195), new Node(165, 195, 1),
                  new Node(165, 165, 1), new Node(210, 165),
                  new Node(270, 150), new Node(315, 150)];
-    for (i = 0; i < nodes.length; i++) {
-        v = node[i + first].visible;
-        node[i + first] = nodes[i];
-        node[i + first].visible = v;
-    }
-    el.push(new Text(160, 90, '"1" и не "1"'));
-    inp.push(new Input(node[0], inputs[0]));
-    wire.push(new Wire(node[0], node[1]));
-    el.push(new Not(node[1], node[2]));
-    wire.push(new Wire(node[2], node[3]));
-    inp.push(new Input(node[4], inputs[1]));
-    wire.push(new Wire(node[4], node[5]));
-    wire.push(new Wire(node[5], node[6]));
-    wire.push(new Wire(node[6], node[7]));
-    el.push(new And(node[3], node[7], node[8]));
-    wire.push(new Wire(node[8], node[9]));
+    inp.push(new Input(node[0], inputs[0]), new Input(node[4], inputs[1]));
+    el.push(new Text(160, 90, '"1" и не "1"'), new Not(node[1], node[2]),
+            new And(node[3], node[7], node[8]));
+    wire.push(new Wire(node[0], node[1]), new Wire(node[2], node[3]),
+              new Wire(node[4], node[5]), new Wire(node[5], node[6]),
+              new Wire(node[6], node[7]), new Wire(node[8], node[9]));
     out.push(new Output(node[9]));
+    transfer(node, nodes, first);
     return 9;
 }
 
@@ -36,11 +27,8 @@ function example2(first, inputs) {
                  new Node(570, 180, 1), new Node(570, 165, 1),
                  new Node(630, 165), new Node(690, 150),
                  new Node(735, 150)];
-    for (i = 0; i < nodes.length; i++) {
-        v = node[i + first].visible;
-        node[i + first] = nodes[i];
-        node[i + first].visible = v;
-    }
+    transfer(node, nodes, first);
+    
     el.push(new Text(480, 90, 'Сложение сигнала со своим отрицанием'));
     inp.push(new Input(node[first], inputs[0]));
     wire.push(new Wire(node[first], node[first + 1]));
@@ -58,12 +46,15 @@ function example2(first, inputs) {
 }
 
 /* example 3: JK flip-flop */
-node = node.concat(new Node(45, 300), new Node(150, 300), new Node(45, 360), new Node(150, 360));
-node = node.concat(new Node(45, 330), new Node(150, 330), new Node(210, 330), new Node(255, 330));
 
 var JKin = [true, false, false, false]; // start levels of input signals
 
 function example3(first, inputs) {
+    var nodes = [new Node(45, 300), new Node(150, 300),
+                 new Node(45, 360), new Node(150, 360),
+                 new Node(45, 330), new Node(150, 330),
+                 new Node(210, 330), new Node(255, 330)];
+    transfer(node, nodes, first);
     el.push(new Text(75, 255, 'JK-триггер'));
     inp.push(new Input(node[first], inputs[0])); // J
     wire.push(new Wire(node[first], node[first + 1]));
@@ -123,10 +114,10 @@ function example5(first, inputs) {
 function reload(first_time) {
     var last;
     last = example1(0, [1, 1]); // calling first example, after this we know which
-                              // node was last in example 1.
-                              // Next example should use 'last + 1' node as first
+                                // node was last in example 1.
+                                // Next example should use 'last + 1' node as first
     
-    //last = example2(last + 1, [1]); // calling second example
+    last = example2(last + 1, [1]); // calling second example
 /*
     last = example3(last + 1, JKin);// calling third example
     JKin[3] = node[last].state.value;           //  changing
@@ -157,7 +148,7 @@ function reload(first_time) {
     /* draw */
     // if (first_time) { createGrid(15); }
     
-    clear(ctd); // clearing canvas
+    clear(ctd); // clearing context
     for (i in wire) { wire[i].draw(); }  // drawing all wires below everything else
     for (i in node) { node[i].draw(); }  // drawing visible nodes
     for (i in inp) { inp[i].draw(); }
@@ -167,19 +158,8 @@ function reload(first_time) {
             el[i].draw();
         } else if (first_time) { el[i].draw(); }
     } // drawing other elements of scheme
-    if (first_time) {
-        ctd.strokeStyle = "#000";
-        ctd.beginPath();
-        ctd.moveTo(0, 0);
-        ctd.lineTo(600, 200);
-        ctd.closePath();
-        ctd.stroke();
-    }
-
+    
     setTimeout("reload(false)", 1000); // time to call 'reload();'
 }
 
-var b = true;
 reload(true);
-
-function stop () { b = !b; }
