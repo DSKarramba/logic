@@ -1,0 +1,6 @@
+canvas {
+    position: absolute;
+}
+
+canvas#static  { z-index: -1; }
+canvas#dynamic { z-index:  0; }
